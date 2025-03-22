@@ -1,0 +1,54 @@
+#name: clickbye
+#services:
+#  postgresql_clickbye:
+#    container_name: postgresql_clickbye
+#    image: postgres:16.2
+#    environment:
+#      - POSTGRES_USER=clickbye
+#      - POSTGRES_PASSWORD=123456
+#      - POSTGRES_HOST_AUTH_METHOD=trust
+#      - POSTGRES_DB=clickbye
+#    healthcheck:
+#      test: [ 'CMD-SHELL', 'pg_isready -U $${POSTGRES_USER}' ]
+#      interval: 5s
+#      timeout: 5s
+#      retries: 10
+#    restart: on-failure
+#    ports:
+#      - "5433:5432"
+name: clickbye
+
+services:
+  minio:
+    image: bitnami/minio:latest
+    container_name: minio_clickbye
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin@2024
+    volumes:
+      - ./data:/bitnami/minio/data
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    command: minio server /bitnami/minio/data --console-address ":9001"
+
+  postgresql_clickbye:
+    container_name: postgresql_clickbye
+    image: postgres:16.2
+    environment:
+      - POSTGRES_USER=clickbye
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_DB=clickbye
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U $${POSTGRES_USER}' ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: on-failure
+    ports:
+      - "5433:5432"
+
+volumes:
+  data:
+    driver: local
