@@ -1,0 +1,132 @@
+# Hướng dẫn bài tập Upload File qua API
+
+## 1. Yêu cầu bài tập
+- Tạo API đẩy 2 file:
+  - File 1: File âm thanh (.mp3)
+  - File 2: File video (.mp4)
+- Validate file 1:
+  - Định dạng bắt buộc: .mp3
+  - Dung lượng tối đa: 15MB
+- Validate file 2:
+  - Định dạng bắt buộc: .mp4
+  - Dung lượng tối đa: 1GB
+- Cả 2 file đều bắt buộc phải gửi lên
+
+## 2. Cấu hình môi trường
+
+### 2.1. Cài đặt các service cần thiết
+1. PostgreSQL
+   - Port: 5433
+   - Database: clickbye
+   - Username: clickbye
+   - Password: 123456
+
+2. MinIO Server
+   - Port: 9000
+   - Access Key: admin
+   - Secret Key: admin@2024
+   - URL: http://localhost:9000
+
+3. Spring Boot Application
+   - Port: 8082
+
+### 2.2. Cấu hình application.yml
+```yaml
+spring:
+  servlet:
+    multipart:
+      max-file-size: 1GB
+      max-request-size: 1GB
+
+integration:
+  minio:
+    access-key: admin
+    secret-key: admin@2024
+    url: http://localhost:9000
+```
+
+## 3. Hướng dẫn test API
+
+### 3.1. Chuẩn bị file test
+1. File audio (.mp3):
+   - Định dạng: MP3
+   - Dung lượng: < 15MB
+   - Tạo file test:
+     ```bash
+     ffmpeg -f lavfi -i "sine=frequency=1000:duration=5" test.mp3
+     ```
+
+2. File video (.mp4):
+   - Định dạng: MP4
+   - Dung lượng: < 1GB
+   - Tạo file test:
+     ```bash
+     ffmpeg -f lavfi -i "testsrc=duration=5:size=1280x720:rate=30" test.mp4
+     ```
+
+### 3.2. Test API bằng Postman
+1. Tạo request mới:
+   - Method: POST
+   - URL: http://localhost:8082/api/v1/upload
+
+2. Cấu hình Headers:
+   - Content-Type: multipart/form-data
+
+3. Cấu hình Body:
+   - Chọn form-data
+   - Thêm 2 key:
+     - audio: Chọn file .mp3
+     - video: Chọn file .mp4
+
+4. Gửi request và kiểm tra kết quả
+
+### 3.3. Kiểm tra file đã upload
+1. Truy cập MinIO Console:
+   - URL: http://localhost:9000
+   - Login với credentials đã cấu hình
+
+2. Kiểm tra trong bucket "resources":
+   - File audio: /media/audio/
+   - File video: /media/video/
+
+## 4. Các trường hợp lỗi cần xử lý
+1. File không đúng định dạng
+2. File vượt quá dung lượng cho phép
+3. Thiếu file bắt buộc
+4. Lỗi kết nối MinIO server
+
+## 5. Response mẫu
+
+### 5.1. Response thành công
+```json
+{
+    "status": {
+        "code": 200,
+        "message": "Success",
+        "timestamp": "2024-03-22T19:56:50.6983725"
+    },
+    "data": {
+        "audioUrl": "http://localhost:9000/resources/media/audio/xxx.mp3",
+        "videoUrl": "http://localhost:9000/resources/media/video/xxx.mp4"
+    }
+}
+```
+
+### 5.2. Response lỗi
+```json
+{
+    "status": {
+        "code": 400,
+        "message": "Bad Request",
+        "timestamp": "2024-03-22T19:56:50.6983725"
+    },
+    "error": "Invalid file format. Only MP3 files are allowed for audio"
+}
+```
+
+## 6. Lưu ý quan trọng
+1. Đảm bảo tất cả service đã được khởi động
+2. Kiểm tra kết nối database và MinIO server
+3. Validate kỹ file trước khi upload
+4. Xử lý các trường hợp lỗi một cách rõ ràng
+5. Đảm bảo bảo mật khi xử lý file upload 
