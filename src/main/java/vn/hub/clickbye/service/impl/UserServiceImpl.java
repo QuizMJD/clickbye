@@ -14,6 +14,7 @@ import vn.hub.clickbye.repository.UserRepository;
 import vn.hub.clickbye.service.UserService;
 import vn.hub.clickbye.service.dto.UserDTO;
 import vn.hub.clickbye.common.Constant;
+import vn.hub.clickbye.service.mapper.UserMapper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,18 +25,19 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final MinioService minioService;
+    private final UserMapper userMapper;
     @Override
     public List<UserDTO> findAll() {
         log.info("find All Users");
         return userRepository.findAll()
                 .stream()
-                .map(UserDTO::fromUser).toList();
+                .map(userMapper::toDTO).toList();
     }
     @Override
     public UserDTO getUser(final Long id) {
 
         return userRepository.findById(id)
-                .map(UserDTO::fromUser)
+                .map(userMapper::toDTO)
                 .orElseThrow(() -> new RuntimeException(Constant.USER_NOT_FOUND_MESSAGE));
     }
 
@@ -48,7 +50,7 @@ public class UserServiceImpl implements UserService {
             throw new EmailExistException("Email or Username already exist!");
         }
 
-        final var entity = dto.toEntity();
+        final var entity = userMapper.toEntity(dto);
         
         // Chỉ upload ảnh nếu có
         if (dto.getAvatar() != null && !dto.getAvatar().isEmpty()) {
@@ -61,7 +63,7 @@ public class UserServiceImpl implements UserService {
             entity.setAvatarUrl(avatarUrl);
         }
         
-        return UserDTO.fromUser(userRepository.save(entity));
+        return userMapper.toDTO(userRepository.save(entity));
     }
 
     private void validateUser(final UserDTO dto) {
@@ -96,7 +98,7 @@ public class UserServiceImpl implements UserService {
         userExist.setPhone(dto.getPhone());
         userExist.setId(dto.getId());
         userExist.setAddress(dto.getAddress());
-        return UserDTO.fromUser(userRepository.save(userExist));
+        return userMapper.toDTO(userRepository.save(userExist));
     }
 
     @Override
