@@ -8,7 +8,7 @@ import vn.hub.clickbye.service.dto.UserDTO;
 public interface UserMapper {
 //    @Mapping(source = "firstName",target = "fullName")
 //@Mapping(target = "fullName",expression = "java(userEntity.getFirstName() + userEntity.getLastName())")
-    @Mapping(target = "fullName", expression = "java(\"%s %s\".formatted(entity.getFirstName(), entity.getLastName()))")
+    @Mapping(target = "fullName", expression = "java(\"%s %s\".formatted(userEntity.getFirstName(), userEntity.getLastName()))")
     @Mapping(target = "lastName",source ="lastName",qualifiedByName = "mapLastName")
     //    @Mapping(target = "id", ignore = true)
     UserDTO toDTO (UserEntity userEntity);
